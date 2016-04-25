@@ -5,7 +5,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
@@ -14,7 +16,10 @@ public class MainActivity extends AppCompatActivity {
     TextView textView;
     EditText editText;
     RadioGroup radioGroup;
-    String sex = "Male";
+    String drinkName = "Black tea";
+    CheckBox checkBox;
+    String note = "";
+
 
 
     @Override
@@ -25,11 +30,12 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView)findViewById(R.id.textView);
         editText = (EditText)findViewById(R.id.editText);
         radioGroup = (RadioGroup)findViewById(R.id.firstRadioGroup);
+        checkBox = (CheckBox)findViewById(R.id.hideCheckBox);
 
         editText.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if(keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN){
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
                     click(v);
                     return true;
                 }
@@ -51,24 +57,19 @@ public class MainActivity extends AppCompatActivity {
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == R.id.maleRadioButton){
-                    sex = "Male";
-                }
-                else if (checkedId == R.id.femaleRadioButtton){
-                    sex = "Female";
-                }
+                RadioButton radioButton = (RadioButton)findViewById(checkedId);
+                drinkName = radioButton.getText().toString();
             }
         });
 
     }
 
     public void click(View view){
-        String text = editText.getText().toString();
-        text = text + "   sex: " + sex;
+        note = editText.getText().toString();
+        String text = note;
         textView.setText(text);
         editText.setText("");
 
     }
-
 
 }
