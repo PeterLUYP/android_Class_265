@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 23
@@ -8,7 +9,7 @@ android {
         applicationId "com.example.peter.simpleui"
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 1 //版本更新 (for my own)
+        versionCode 1 //版本更新編碼 (for my own)
         versionName "1.0" //版本更新編碼 (for google play)
     }
     buildTypes {

@@ -20,13 +20,17 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
+
 public class MainActivity extends AppCompatActivity {
 
     TextView textView;
     EditText editText;
     RadioGroup radioGroup;
     ArrayList<Order> orders;
-    String drinkName = "Black tea";
+    String drinkName;
     CheckBox checkBox;
     ListView listView;
     String note = "";
@@ -34,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
     SharedPreferences sp;//功能:讀
     SharedPreferences.Editor editor;//功能:寫
+
+    Realm realm;
 
 
 
@@ -55,9 +61,10 @@ public class MainActivity extends AppCompatActivity {
         //容量不大
         editor = sp.edit();
 
-        String[] data = Utils.readFile(this, "notes").split("\n");
-
-        textView.setText(data[0]);
+        // Create a RealmConfiguration which is to locate Realm file in package's "files" directory.
+        RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).build();
+        // Get a Realm instance for this thread
+        realm = Realm.getInstance(realmConfig);
 
         editText.setText(sp.getString("editText", ""));
         //"editText" → 要找的東西, "" → 找不到東西時給的東西
@@ -89,7 +96,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        radioGroup.check(sp.getInt("radioGroup", R.id.blackTeaRadioButton));
+        int checkedId = sp.getInt("radioGroup", R.id.blackTeaRadioButton);
+        radioGroup.check(checkedId);
+
+        RadioButton radioButton = (RadioButton)findViewById(checkedId);
+        drinkName = radioButton.getText().toString();
 
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -108,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 //getItem完型態是Object→需 (Order)轉型態為order
                 Order order = (Order) parent.getAdapter().getItem(position);
                 //parent.getAdapter() → 拿出OrderAdapter
-                Snackbar.make(view, order.note, Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(view, order.getNote(), Snackbar.LENGTH_SHORT).show();
             }
         });
 
@@ -120,7 +131,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void setupListView(){
-        OrderAdapter adapter = new OrderAdapter(this, orders);
+        RealmResults results = realm.allObjects(Order.class);
+
+
+        OrderAdapter adapter = new OrderAdapter(this, results.subList(0, results.size()));
         listView.setAdapter(adapter);
     }
 
@@ -136,13 +150,16 @@ public class MainActivity extends AppCompatActivity {
         String text = note;
         textView.setText(text);
         Order order = new Order();
-        order.drinkName = drinkName;
-        order.note = note;
-        order.storeInfo = (String)spinner.getSelectedItem();
+        order.setDrinkName(drinkName);
+        order.setNote(note);
+        order.setStoreInfo((String) spinner.getSelectedItem());
 
-        orders.add(order);
 
-        Utils.writeFile(this, "notes", order.note + "\n");
+
+        // Persist your data easily
+        realm.beginTransaction();
+        realm.copyToRealm(order);
+        realm.commitTransaction();
 
         editText.setText("");
 
