@@ -1,5 +1,6 @@
 package com.example.peter.simpleui;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -49,9 +50,26 @@ public class MainActivity extends AppCompatActivity {
         spinner = (Spinner)findViewById(R.id.spinner);
         orders = new ArrayList<>();
 
+        sp = getSharedPreferences("setting", Context.MODE_PRIVATE);
+        //"setting" → 這個功能的名字 , Context.MODE_PRIVATE → 模式: 可讀寫[覆蓋]
+        //容量不大
+        editor = sp.edit();
+
+        String[] data = Utils.readFile(this, "notes").split("\n");
+
+        textView.setText(data[0]);
+
+        editText.setText(sp.getString("editText", ""));
+        //"editText" → 要找的東西, "" → 找不到東西時給的東西
+
         editText.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
+                String text = editText.getText().toString();
+                editor.putString("editText", text);
+                //text → editor 導入的東西, "editText" → 命名
+                editor.apply();
+
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
                     click(v);
                     return true;
@@ -71,9 +89,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        radioGroup.check(sp.getInt("radioGroup", R.id.blackTeaRadioButton));
+
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
+                editor.putInt("radioGroup", checkedId);
+                editor.apply();
+
                 RadioButton radioButton = (RadioButton) findViewById(checkedId);
                 drinkName = radioButton.getText().toString();
             }
@@ -82,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Order order = (Order)parent.getAdapter().getItem(position);
                 //getItem完型態是Object→需 (Order)轉型態為order
+                Order order = (Order) parent.getAdapter().getItem(position);
                 //parent.getAdapter() → 拿出OrderAdapter
                 Snackbar.make(view, order.note, Snackbar.LENGTH_SHORT).show();
             }
@@ -91,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
 
         setupListView();
         setupSpinner();
+
+
 
     }
 
@@ -116,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
         order.storeInfo = (String)spinner.getSelectedItem();
 
         orders.add(order);
+
+        Utils.writeFile(this, "notes", order.note + "\n");
 
         editText.setText("");
 
