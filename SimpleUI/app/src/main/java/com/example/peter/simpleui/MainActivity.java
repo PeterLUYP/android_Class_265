@@ -1,10 +1,13 @@
 package com.example.peter.simpleui;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -27,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     String note = "";
     Spinner spinner;
+
+    SharedPreferences sp;//功能:讀
+    SharedPreferences.Editor editor;//功能:寫
 
 
 
@@ -70,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 RadioButton radioButton = (RadioButton) findViewById(checkedId);
                 drinkName = radioButton.getText().toString();
+            }
+        });
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Order order = (Order)parent.getAdapter().getItem(position);
+                //getItem完型態是Object→需 (Order)轉型態為order
+                //parent.getAdapter() → 拿出OrderAdapter
+                Snackbar.make(view, order.note, Snackbar.LENGTH_SHORT).show();
             }
         });
 
