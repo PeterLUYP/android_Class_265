@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     RadioGroup radioGroup;
     ArrayList<Order> orders;
     String drinkName;
+    String storeInfo;
     CheckBox checkBox;
     ListView listView;
     String note = "";
@@ -123,6 +124,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        spinner.setSelection(sp.getInt("spinner", 0));
+        storeInfo = (String)spinner.getSelectedItem();
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                editor.putInt("spinner", spinner.getSelectedItemPosition());
+                editor.apply();
+                storeInfo = (String)spinner.getSelectedItem();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
+
         setupListView();
         setupSpinner();
 
@@ -143,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, data);
 
         spinner.setAdapter(adapter);
+        spinner.setSelection(sp.getInt("spinner", 0));
     }
 
     public void click(View view){
@@ -152,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         Order order = new Order();
         order.setDrinkName(drinkName);
         order.setNote(note);
-        order.setStoreInfo((String) spinner.getSelectedItem());
+        order.setStoreInfo(storeInfo);
 
 
 
