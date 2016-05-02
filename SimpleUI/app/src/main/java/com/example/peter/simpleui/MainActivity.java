@@ -1,10 +1,12 @@
 package com.example.peter.simpleui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -13,7 +15,6 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -25,6 +26,12 @@ import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int REQUEST_CODE_MENU_ACTIVITY = 0;
+    /*
+    final : 最終型態，不能動 → 大寫
+    自己設定的識別碼
+     */
 
     TextView textView;
     EditText editText;
@@ -47,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);//搶螢幕
+        Log.d("debug", "Main Activity onCreate");
 
         textView = (TextView)findViewById(R.id.textView);
         editText = (EditText)findViewById(R.id.editText);
@@ -97,22 +105,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        int checkedId = sp.getInt("radioGroup", R.id.blackTeaRadioButton);
-        radioGroup.check(checkedId);
-
-        RadioButton radioButton = (RadioButton)findViewById(checkedId);
-        drinkName = radioButton.getText().toString();
-
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                editor.putInt("radioGroup", checkedId);
-                editor.apply();
-
-                RadioButton radioButton = (RadioButton) findViewById(checkedId);
-                drinkName = radioButton.getText().toString();
-            }
-        });
+//        int checkedId = sp.getInt("radioGroup", R.id.blackTeaRadioButton);
+//        radioGroup.check(checkedId);
+//
+//        RadioButton radioButton = (RadioButton)findViewById(checkedId);
+//        drinkName = radioButton.getText().toString();
+//
+//        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(RadioGroup group, int checkedId) {
+//                editor.putInt("radioGroup", checkedId);
+//                editor.apply();
+//
+//                RadioButton radioButton = (RadioButton) findViewById(checkedId);
+//                drinkName = radioButton.getText().toString();
+//            }
+//        });
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -188,4 +196,60 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void goToMenu(View view){
+        Intent intent = new Intent();
+        intent.setClass(this, DrinkMenuActivity.class);//從這個Class到DrinkMenuActivity.class
+        /*
+        [版本1]
+        startActivity(intent);//啟動這個intent
+         */
+        startActivityForResult(intent, REQUEST_CODE_MENU_ACTIVITY);
+        //啟動這個Intent並可以得知是誰的回傳
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUEST_CODE_MENU_ACTIVITY){
+            if(resultCode == RESULT_OK){
+                String menuResult = data.getStringExtra("result");
+            }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("debug", "Main Activity onStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("debug", "Main Activity onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("debug", "Main Activity onPause");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("debug", "Main Activity onStop");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("debug", "Main Activity onDestroy");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d("debug", "Main Activity onRestart");
+    }
 }
