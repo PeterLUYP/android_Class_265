@@ -44,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     String note = "";
     Spinner spinner;
 
+    String menuResults = "";
+
     SharedPreferences sp;//功能:讀
     SharedPreferences.Editor editor;//功能:寫
 
@@ -71,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         editor = sp.edit();
 
         // Create a RealmConfiguration which is to locate Realm file in package's "files" directory.
-        RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).build();
+        RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).deleteRealmIfMigrationNeeded().build();
         // Get a Realm instance for this thread
         realm = Realm.getInstance(realmConfig);
 
@@ -179,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
         String text = note;
         textView.setText(text);
         Order order = new Order();
-        order.setDrinkName(drinkName);
+        order.setMenuResults(menuResults);
         order.setNote(note);
         order.setStoreInfo(storeInfo);
 
@@ -191,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
         realm.commitTransaction();
 
         editText.setText("");
+        menuResults = "";
 
         setupListView();
 
@@ -212,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == REQUEST_CODE_MENU_ACTIVITY){
             if(resultCode == RESULT_OK){
-                String menuResult = data.getStringExtra("result");
+                menuResults = data.getStringExtra("result");
             }
         }
     }
