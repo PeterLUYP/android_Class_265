@@ -18,8 +18,16 @@ import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.SaveCallback;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -59,6 +67,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);//搶螢幕
         Log.d("debug", "Main Activity onCreate");
 
+        ParseObject testObject = new ParseObject("TestObject");
+        testObject.put("test", "123");
+        testObject.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+
+            }
+        });
+
         textView = (TextView)findViewById(R.id.textView);
         editText = (EditText)findViewById(R.id.editText);
         radioGroup = (RadioGroup)findViewById(R.id.firstRadioGroup);
@@ -74,8 +91,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Create a RealmConfiguration which is to locate Realm file in package's "files" directory.
         RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).deleteRealmIfMigrationNeeded().build();
+
+        Realm.setDefaultConfiguration(realmConfig);
+
         // Get a Realm instance for this thread
-        realm = Realm.getInstance(realmConfig);
+        realm = Realm.getDefaultInstance();
 
         editText.setText(sp.getString("editText", ""));
         //"editText" → 要找的東西, "" → 找不到東西時給的東西
@@ -161,11 +181,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void setupListView(){
-        RealmResults results = realm.allObjects(Order.class);
+
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Order");//去網路上找到Order
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> objects, ParseException e) {
+                if(e != null){
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+
+                    RealmResults results = realm.allObjects(Order.class);
 
 
-        OrderAdapter adapter = new OrderAdapter(this, results.subList(0, results.size()));
-        listView.setAdapter(adapter);
+                    OrderAdapter adapter = new OrderAdapter(MainActivity.this, results.subList(0, results.size()));
+                    listView.setAdapter(adapter);
+
+                    realm.close();
+
+                    return;
+                }
+
+                List<Order> orders = new ArrayList<Order>();
+
+                for(int i = 0; i < objects.size(); i++){
+                    Order order = new Order();
+                    order.setNote(objects.get(i).getString("note"));
+                    order.setStoreInfo(objects.get(i).getString("storeInfo"));
+                    order.setMenuResults(objects.get(i).getString("menuResults"));
+                    orders.add(order);
+                }
+
+                OrderAdapter adapter = new OrderAdapter(MainActivity.this, orders);
+                listView.setAdapter(adapter);
+
+            }
+        });
     }
 
     void setupSpinner(){
@@ -187,15 +236,21 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        // Persist your data easily
-        realm.beginTransaction();
-        realm.copyToRealm(order);
-        realm.commitTransaction();
+        SaveCallbackWithRealm saveCallbackWithRealm = new SaveCallbackWithRealm(order, new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e != null) {
+                    Toast.makeText(MainActivity.this, "Save fail", Toast.LENGTH_LONG).show();
+                }
 
-        editText.setText("");
-        menuResults = "";
+                editText.setText("");
+                menuResults = "";
 
-        setupListView();
+                setupListView();
+            }
+        });
+
+        order.saveToRemote(saveCallbackWithRealm);
 
     }
 
@@ -247,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        realm.close();
         Log.d("debug", "Main Activity onDestroy");
     }
 
