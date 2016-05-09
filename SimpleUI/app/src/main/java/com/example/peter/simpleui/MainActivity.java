@@ -8,6 +8,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
@@ -15,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     String note = "";
     Spinner spinner;
+    ProgressBar progressBar;
 
     String menuResults = "";
 
@@ -67,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);//搶螢幕
         Log.d("debug", "Main Activity onCreate");
 
-        ParseObject testObject = new ParseObject("TestObject");
-        testObject.put("test", "123");
+        ParseObject testObject = new ParseObject("HomeworkParse");
+        testObject.put("sid", "盧冠翔");
         testObject.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
@@ -82,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         checkBox = (CheckBox)findViewById(R.id.hideCheckBox);
         listView = (ListView)findViewById(R.id.listView);
         spinner = (Spinner)findViewById(R.id.spinner);
+        progressBar = (ProgressBar)findViewById(R.id.progressBar);
         orders = new ArrayList<>();
 
         sp = getSharedPreferences("setting", Context.MODE_PRIVATE);
@@ -181,6 +186,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void setupListView(){
+        final RealmResults results = realm.allObjects(Order.class);
+
+        progressBar.setVisibility(View.VISIBLE);
+
+        OrderAdapter adapter = new OrderAdapter(MainActivity.this, results.subList(0, results.size()));
+        listView.setAdapter(adapter);
 
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Order");//去網路上找到Order
         query.findInBackground(new FindCallback<ParseObject>() {
@@ -189,18 +200,14 @@ public class MainActivity extends AppCompatActivity {
                 if(e != null){
                     Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
 
-                    RealmResults results = realm.allObjects(Order.class);
-
-
-                    OrderAdapter adapter = new OrderAdapter(MainActivity.this, results.subList(0, results.size()));
-                    listView.setAdapter(adapter);
-
-                    realm.close();
+                    progressBar.setVisibility(View.GONE);
 
                     return;
                 }
 
                 List<Order> orders = new ArrayList<Order>();
+
+                Realm realm = Realm.getDefaultInstance();
 
                 for(int i = 0; i < objects.size(); i++){
                     Order order = new Order();
@@ -208,7 +215,17 @@ public class MainActivity extends AppCompatActivity {
                     order.setStoreInfo(objects.get(i).getString("storeInfo"));
                     order.setMenuResults(objects.get(i).getString("menuResults"));
                     orders.add(order);
+
+                    if(results.size() <= 1){
+                        realm.beginTransaction();
+                        realm.copyToRealm(order);
+                        realm.commitTransaction();
+                    }
                 }
+
+                realm.close();
+
+                progressBar.setVisibility(View.GONE);
 
                 OrderAdapter adapter = new OrderAdapter(MainActivity.this, orders);
                 listView.setAdapter(adapter);
@@ -273,6 +290,23 @@ public class MainActivity extends AppCompatActivity {
                 menuResults = data.getStringExtra("result");
             }
         }
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id == R.id.action_take_photo){
+            Toast.makeText(this, "Take Photo", Toast.LENGTH_LONG).show();
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
